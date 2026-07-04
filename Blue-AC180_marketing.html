@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blue-AC180 - Bluetti AC180 dashboard for iPhone and CarPlay</title>
+  <meta name="description" content="Blue-AC180 reads Bluetti AC180 telemetry over local Bluetooth and presents SOC, runtime, AC/DC power, charging and temperature on iPhone and Apple CarPlay." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05070b;
+      --panel: #0e131b;
+      --panel-2: #111925;
+      --line: #1f334a;
+      --text: #eef7ff;
+      --muted: #8ea5bb;
+      --cyan: #10e8ff;
+      --blue: #2578ff;
+      --amber: #ffb21a;
+      --green: #48d597;
+      --red: #ff5d6c;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .42);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 20% -10%, rgba(37, 120, 255, .34), transparent 34rem),
+        radial-gradient(circle at 90% 8%, rgba(16, 232, 255, .22), transparent 28rem),
+        linear-gradient(180deg, #07172a 0%, var(--bg) 46%, #030407 100%);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    nav {
+      min-height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 800; font-size: 18px; }
+    .brand img { width: 42px; height: 42px; border-radius: 12px; box-shadow: 0 10px 28px rgba(37,120,255,.28); }
+    .nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .nav-links a { color: var(--muted); font-weight: 700; font-size: 14px; padding: 10px 12px; border-radius: 999px; }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,.08); }
+    .hero { display: grid; grid-template-columns: 1.04fr .96fr; gap: 48px; align-items: center; padding: 72px 0 54px; }
+    .eyebrow { color: var(--cyan); font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; }
+    h1 { font-size: clamp(48px, 8vw, 92px); line-height: .92; margin: 0 0 22px; letter-spacing: 0; }
+    .lead { color: #c7d8ea; font-size: clamp(18px, 2vw, 23px); max-width: 680px; margin: 0 0 28px; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 18px; border-radius: 999px; font-weight: 800; border: 1px solid rgba(255,255,255,.12); }
+    .button.primary { background: linear-gradient(135deg, var(--cyan), var(--blue)); color: #03111c; border: 0; }
+    .button.secondary { background: rgba(255,255,255,.08); color: var(--text); }
+    .hero-card {
+      background: linear-gradient(145deg, rgba(17,25,37,.94), rgba(4,8,15,.96));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
+      border-radius: 26px;
+      padding: 26px;
+    }
+    .device-art { display: grid; place-items: center; padding: 12px 8px 28px; }
+    .device-art img { width: min(360px, 88%); border-radius: 29%; box-shadow: 0 26px 64px rgba(0,0,0,.5); }
+    .telemetry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .metric { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 14px; min-height: 92px; }
+    .metric small { color: var(--muted); display: block; font-weight: 700; margin-bottom: 8px; }
+    .metric strong { font-size: 28px; line-height: 1; }
+    section { padding: 64px 0; }
+    .section-title { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 24px; }
+    h2 { font-size: clamp(30px, 4vw, 50px); margin: 0; line-height: 1; }
+    .section-title p { color: var(--muted); max-width: 520px; margin: 0; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .card { background: rgba(14,19,27,.82); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 22px; min-height: 210px; }
+    .icon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; font-size: 26px; font-weight: 900; margin-bottom: 18px; }
+    .cyan { background: rgba(16,232,255,.16); color: var(--cyan); }
+    .blue { background: rgba(37,120,255,.18); color: #7db2ff; }
+    .amber { background: rgba(255,178,26,.16); color: var(--amber); }
+    .green { background: rgba(72,213,151,.16); color: var(--green); }
+    .card h3 { margin: 0 0 10px; font-size: 20px; }
+    .card p { color: var(--muted); margin: 0; }
+    .carplay { background: linear-gradient(135deg, rgba(14,40,66,.8), rgba(17,25,37,.72)); border-top: 1px solid rgba(255,255,255,.08); border-bottom: 1px solid rgba(255,255,255,.08); }
+    .cp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 26px; }
+    .cp-tile { border-radius: 20px; padding: 24px; min-height: 190px; border: 1px solid rgba(255,255,255,.12); background: rgba(4,8,15,.52); }
+    .cp-tile strong { display: block; font-size: 24px; margin-bottom: 12px; }
+    .cp-tile ul { margin: 0; padding-left: 19px; color: #c8d7e7; }
+    .privacy-strip { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; padding: 28px; border-radius: 22px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); }
+    footer { color: var(--muted); border-top: 1px solid rgba(255,255,255,.08); padding: 34px 0 46px; }
+    @media (max-width: 900px) {
+      .hero, .grid, .cp-grid, .privacy-strip { grid-template-columns: 1fr; }
+      .telemetry { grid-template-columns: 1fr 1fr; }
+      nav { align-items: flex-start; flex-direction: column; padding: 18px 0; }
+      .nav-links { justify-content: flex-start; }
+    }
+    @media (max-width: 520px) {
+      .container { width: min(100% - 28px, 1180px); }
+      .hero { padding-top: 48px; }
+      .telemetry { grid-template-columns: 1fr; }
+      .card { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <a class="brand" href="#top"><img src="assets/Blue-AC180-icon.png" alt="Blue-AC180 icon">Blue-AC180</a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#carplay">CarPlay</a>
+        <a href="Blue-AC180_Privacy-Policy.html">Privacy</a>
+        <a href="mailto:support@mf-lab.com">Support</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="container hero">
+      <div>
+        <div class="eyebrow">Bluetti AC180 telemetry</div>
+        <h1>Blue-AC180</h1>
+        <p class="lead">A focused iPhone and Apple CarPlay dashboard for your Bluetti AC180 power station, reading live values over local Bluetooth.</p>
+        <div class="actions">
+          <a class="button primary" href="mailto:support@mf-lab.com">Contact support</a>
+          <a class="button secondary" href="Blue-AC180_Privacy-Policy.html">Privacy policy</a>
+        </div>
+      </div>
+      <div class="hero-card" aria-label="Blue-AC180 sample dashboard">
+        <div class="device-art"><img src="assets/Blue-AC180-icon.png" alt="Bluetti AC180 app icon"></div>
+        <div class="telemetry">
+          <div class="metric"><small>SOC</small><strong>79%</strong></div>
+          <div class="metric"><small>Runtime</small><strong>86.3 h</strong></div>
+          <div class="metric"><small>AC In</small><strong>280 W</strong></div>
+          <div class="metric"><small>AC Out</small><strong>0 W</strong></div>
+          <div class="metric"><small>DC Out</small><strong>0 W</strong></div>
+          <div class="metric"><small>Mode</small><strong>Silent</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="features">
+      <div class="section-title">
+        <h2>Built for quick power checks.</h2>
+        <p>Blue-AC180 keeps the dashboard calm, readable and useful while travelling, camping or running an off-grid setup.</p>
+      </div>
+      <div class="grid">
+        <article class="card"><div class="icon cyan">%</div><h3>Battery status</h3><p>Monitor state of charge, battery voltage and estimated remaining runtime.</p></article>
+        <article class="card"><div class="icon blue">W</div><h3>AC and DC power</h3><p>See AC input, AC output and DC output power in a simple glanceable layout.</p></article>
+        <article class="card"><div class="icon amber">~</div><h3>Charging state</h3><p>Check grid connection, charging activity and Standard, Silent or Turbo charging mode.</p></article>
+        <article class="card"><div class="icon green">BLE</div><h3>Local Bluetooth</h3><p>Connect directly to AC180 devices nearby. No cloud account is required.</p></article>
+      </div>
+    </section>
+
+    <section class="carplay" id="carplay">
+      <div class="container">
+        <div class="section-title">
+          <h2>CarPlay, without clutter.</h2>
+          <p>Three large colored entry points lead to the values that matter most: Overview, Power and Battery.</p>
+        </div>
+        <div class="cp-grid">
+          <div class="cp-tile"><strong>Overview</strong><ul><li>SOC</li><li>Runtime</li><li>AC/DC power summary</li><li>Temperature</li></ul></div>
+          <div class="cp-tile"><strong>Power</strong><ul><li>Grid connected</li><li>Charging state</li><li>Charging mode</li><li>AC/DC enabled state</li></ul></div>
+          <div class="cp-tile"><strong>Battery</strong><ul><li>Voltage</li><li>Current estimate</li><li>Remaining runtime</li><li>Internal temperature</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container">
+      <div class="privacy-strip">
+        <div>
+          <h2>Private by design.</h2>
+          <p class="lead">Telemetry is read locally over Bluetooth and displayed on your iPhone or CarPlay screen. Blue-AC180 does not require a cloud account.</p>
+        </div>
+        <a class="button primary" href="Blue-AC180_Privacy-Policy.html">Read privacy policy</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">© 2026 MF-Lab. Blue-AC180 is an independent app and is not affiliated with Bluetti.</div>
+  </footer>
+</body>
+</html>
